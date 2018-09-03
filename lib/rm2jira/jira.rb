@@ -60,6 +60,7 @@ module RM2Jira
         upload_attachments(response_body['id']) unless @ticket['attachments'].empty?
         add_comment(response_body['id']) unless @ticket['journals'].empty?
         abort unless Validator.validate_data(@ticket, response_body['id'], changed_name)
+        puts "Ticket:#{response_body['id']} validated successfully"
       end
       { code: res.code, response: response_body }
     end

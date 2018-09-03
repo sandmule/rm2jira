@@ -25,8 +25,11 @@ module RM2Jira
       req.body = search_body
       res = https.request(req)
       response_body = JSON.parse(res.body)
+
       if response_body['total'] >= 1
-        puts "ticket:#{redmine_id} already exists in jira - skipping"
+        ticket = Redmine.download_ticket(redmine_id)
+        validate_data(ticket, response_body['issues'][0]['id'])
+        puts "ticket:#{redmine_id} already exists and validated in jira - skipping"
         true
       else
         false
@@ -50,21 +53,19 @@ module RM2Jira
       when '10001'
         unless story_validate(@jira_ticket)
           puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
-          result = delete_issue(jira_id)
+          delete_issue(jira_id)
           abort
         end
       when '10004'
         unless bug_validate(@jira_ticket)
           puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
-          result = delete_issue(jira_id)
+          delete_issue(jira_id)
           abort
         end
       else
         puts "Unknown ticket type for ticket: #{@rm_ticket['id']}"
         return false
       end
-
-      puts "Ticket:#{jira_id} validated successfully" if result.nil?
       true
     end
 
@@ -90,7 +91,7 @@ module RM2Jira
       return false unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
       return false unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
       return false unless data['description'] == get_description
-      return false unless data['reporter']['name'] == get_name
+      return false unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
       return false unless validate_comments(@jira_ticket) unless @rm_ticket['journals'].empty?
       return false unless validate_attachments(@jira_ticket) unless @rm_ticket['attachments'].empty?
       true
