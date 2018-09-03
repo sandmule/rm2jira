@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+$LOAD_PATH.push File.expand_path(File.dirname(__FILE__) + '/../lib')
+require 'bundler/setup'
+require 'dotenv/load'
+require 'rm2jira'
+RM2Jira::CLI.start(ARGV)
