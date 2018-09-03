@@ -49,13 +49,15 @@ module RM2Jira
       case @jira_ticket['issuetype']['id']
       when '10001'
         unless story_validate(@jira_ticket)
-          puts "Ticket:#{jira_id} was unable to be validated"
+          puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
           result = delete_issue(jira_id)
+          abort
         end
       when '10004'
         unless bug_validate(@jira_ticket)
-          puts "Ticket:#{jira_id} was unable to be validated"
+          puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
           result = delete_issue(jira_id)
+          abort
         end
       else
         puts "Unknown ticket type for ticket: #{@rm_ticket['id']}"
@@ -107,12 +109,14 @@ module RM2Jira
     end
 
     def self.validate_attachments(data)
+      array = []
+      data['attachment'].each { |x| array << x['filename'] }
+      return true unless array.uniq.length == array.length
       return false unless @rm_ticket['attachments'].count == data['attachment'].count
       data['attachment'].each do |j_attachment|
         @rm_ticket['attachments'].each do |rm_attachment|
           next unless j_attachment['filename'] == rm_attachment['filename']
           return false unless j_attachment['size'] == rm_attachment['filesize']
-          return false unless j_attachment['mimeType'] == rm_attachment['content_type']
         end
       end
       true
@@ -190,7 +194,7 @@ module RM2Jira
       req['Authorization'] = "Basic #{@auth64}"
       res = https.request(req)
       if res.code == '204'
-        puts "ticket:#{issue_id} deleted successfully"
+        puts "Ticket:#{issue_id} deleted successfully"
       else
         puts "unable to delete unvalidated ticket:#{issue_id}"
         abort

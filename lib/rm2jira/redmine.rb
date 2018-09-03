@@ -52,13 +52,18 @@ module RM2Jira
         end
       end
 
-      puts "#{@total_count} tickets to migrate"
       id_array
     end
 
-    def self.get_issues(issue_ids)
-      bar = ProgressBar.new(@total_count)
-      issue_ids.each do |issue_id|
+    def self.get_issues(issue_ids, start_at = 0)
+      id_hash = {}
+      issue_ids.each.with_index do |x, index|
+        id_hash.merge!(x => index)
+      end
+
+      bar = ProgressBar.new(@total_count - (start_at.to_i == 0 ? 0 : id_hash[start_at.to_i]))
+      puts "#{@total_count - (start_at.to_i == 0 ? 0 : id_hash[start_at.to_i])} tickets to migrate"
+      issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
         bar.increment!
         next if Validator.search_jira_for_rm_id(issue_id)
         uri = URI("#{BASE_URL}/issues/#{issue_id}.json?include=attachments,relations,children,changesets,journals") #fix fix fix
@@ -78,14 +83,33 @@ module RM2Jira
       end
     end
 
+    def self.upload_single_ticket(ticket_id)
+      return if Validator.search_jira_for_rm_id(ticket_id)
+      uri = URI("#{BASE_URL}/issues/#{ticket_id}.json?include=attachments,relations,children,changesets,journals") #fix fix fix
+      req = Net::HTTP::Get.new(uri)
+
+      req["Content-Type"] = "application/json"
+      req['X-Redmine-API-Key'] = API_KEY
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      response = http.request(req)
+
+      # parse data and pass to jira
+      ticket = JSON.parse(response.body)['issue']
+      Redmine.download_attachments(ticket) unless ticket['attachments'].empty?
+      RM2Jira::Jira.upload_ticket_to_jira(ticket)
+    end
+
     def self.download_attachments(ticket)
+      Dir.mkdir("tmp/#{ticket['id']}") unless File.exists?("tmp/#{ticket['id']}")
       ticket['attachments'].each do |attachment|
         uri = URI(attachment['content_url'])
         Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == 'https', verify_mode: OpenSSL::SSL::VERIFY_NONE ) do |http|
           request = Net::HTTP::Get.new(uri.request_uri)
           request['X-Redmine-API-Key'] = API_KEY
           http.request(request) do |response|
-            open("tmp/#{attachment['filename']}", 'wb') do |file|
+            open("tmp/#{ticket['id']}/#{attachment['filename']}", 'wb') do |file|
               file.write(response.body)
             end
           end

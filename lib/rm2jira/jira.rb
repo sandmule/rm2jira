@@ -68,11 +68,11 @@ module RM2Jira
       @ticket['attachments'].each.with_index do |attachment, index|
         url = "https://livelinktech.atlassian.net/rest/api/2/issue/#{ticket_id}/attachments"
         resource = RestClient::Resource.new(url, USER, PASS)
-        response = resource.post({ file: File.new("tmp/#{attachment['filename']}")}, 'X-Atlassian-Token' => 'nocheck' )
+        response = resource.post({ file: File.new("tmp/#{@ticket['id']}/#{attachment['filename']}")}, 'X-Atlassian-Token' => 'nocheck' )
         response.code.eql?(200)
         puts "Attachment #{index + 1} of #{@ticket['attachments'].count} added to ticket:#{ticket_id}"
-        File.delete("tmp/#{attachment['filename']}") if File.exist? "tmp/#{attachment['filename']}"
       end
+      FileUtils.rm_rf("tmp/#{@ticket['id']}") if File.directory? "tmp/#{@ticket['id']}"
     end
 
     def self.add_comment(ticket_id)
