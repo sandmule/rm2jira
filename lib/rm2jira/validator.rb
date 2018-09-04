@@ -152,14 +152,24 @@ module RM2Jira
 
     def self.get_description
       sub_tasks = ''
+      relations = ''
+
       unless @rm_ticket['children'].nil?
         @rm_ticket['children'].each do |sub_task|
-          sub_tasks << "plan.io ##{sub_task['id']}:#{sub_task['subject']}\n"
+          sub_tasks << "plan.io ##{sub_task['id']} : #{sub_task['subject']}\n"
+        end
+      end
+
+      unless @rm_ticket['relations'].nil?
+        @rm_ticket['relations'].each do |relation|
+          relations << "#{relations_hash(relation)[relation['id']]}\n"
         end
       end
 
       ticket_name = @rm_ticket['assigned_to'].nil? ? 'Unassigned' : @rm_ticket['assigned_to']['name']
       sub_tasks_string = "Redmine Subtasks:\n#{sub_tasks}"
+      parent_string = @rm_ticket['parent'].nil? ? nil : "Redmine Parent ID: plan.io ##{@rm_ticket['parent']['id']}"
+      relations_string = "Redmine Relations:\n#{relations}"
 
       unless @changed_name
         author_string = "Redmine Author: #{@rm_ticket['author']['name']}"
@@ -175,7 +185,9 @@ module RM2Jira
       "#{assignee_string} \n"\
       "Redmine Created at: #{Time.parse(@rm_ticket['created_on']).strftime("%y-%m-%-e %H:%M")}\n"\
       "Redmine Updated at: #{Time.parse(@rm_ticket['updated_on']).strftime("%y-%m-%-e %H:%M")}\n"\
-      "#{sub_tasks_string unless sub_tasks.empty?}"
+      "#{parent_string}\n"\
+      "#{sub_tasks_string unless sub_tasks.empty?}"\
+      "#{relations_string unless relations.empty?}"
     end
 
     def self.get_name
@@ -185,6 +197,20 @@ module RM2Jira
       first_initial = name[0][0]
       surname = name[1]
       first_initial + '.' + surname
+    end
+
+    def self.relations_hash(relation)
+      {
+        '1466' => "Related to #{relation['issue_to_id']}",
+        '1467' => "Duplicates #{relation['issue_to_id']}",
+        '1468' => "Duplicated by #{relation['issue_id']}",
+        '1470' => "Blocks #{relation['issue_to_id']}",
+        '1471' => "Blocked by #{relation['issue_id']}",
+        '1472' => "Precedes #{relation['issue_to_id']}",
+        '1473' => "Follows #{relation['issue_id']}",
+        '1474' => "Copied to #{relation['issue_to_id']}",
+        '1475' => "Copied From #{relation['issue_id']}",
+      }
     end
 
     def self.delete_issue(issue_id)

@@ -42,6 +42,9 @@ module RM2Jira
           customfield_10056: @ticket['project']['name'],
           customfield_10102: get_description,
           customfield_10103: @ticket.fetch('fixed_version', {})['name'],
+          customfield_10057: [{
+            value: (get_sprint_team[@ticket['project']['name']] unless get_component[@ticket['project']['name']] == 'QATS')
+          }],
           components: [{
             name: get_component[@ticket['project']['name']]
           }],
@@ -75,6 +78,9 @@ module RM2Jira
          },
          customfield_10055: @ticket['id'],
          customfield_10056: @ticket['project']['name'],
+         customfield_10057: {
+           value: (get_sprint_team[@ticket['project']['name']] unless get_component[@ticket['project']['name']] == 'QATS')
+         },
          components: [{
            name: get_component[@ticket['project']['name']]
          }],
@@ -109,14 +115,24 @@ module RM2Jira
 
     def get_description
       sub_tasks = ''
+      relations = ''
+
       unless @ticket['children'].nil?
         @ticket['children'].each do |sub_task|
-          sub_tasks << "plan.io ##{sub_task['id']}:#{sub_task['subject']}\n"
+          sub_tasks << "plan.io ##{sub_task['id']} : #{sub_task['subject']}\n"
+        end
+      end
+
+      unless @ticket['relations'].nil?
+        @ticket['relations'].each do |relation|
+          relations << "#{relations_hash(relation)[relation['id']]}\n"
         end
       end
 
       ticket_name = @ticket['assigned_to'].nil? ? 'Unassigned' : @ticket['assigned_to']['name']
       sub_tasks_string = "Redmine Subtasks:\n#{sub_tasks}"
+      parent_string = @ticket['parent'].nil? ? nil : "Redmine Parent ID: plan.io ##{@ticket['parent']['id']}"
+      relations_string = "Redmine Relations:\n#{relations}"
 
       unless @changed_name
         author_string = "Redmine Author: #{@ticket['author']['name']}"
@@ -132,7 +148,9 @@ module RM2Jira
       "#{assignee_string} \n"\
       "Redmine Created at: #{Time.parse(@ticket['created_on']).strftime("%y-%m-%-e %H:%M")}\n"\
       "Redmine Updated at: #{Time.parse(@ticket['updated_on']).strftime("%y-%m-%-e %H:%M")}\n"\
-      "#{sub_tasks_string unless sub_tasks.empty?}"
+      "#{parent_string}\n"\
+      "#{sub_tasks_string unless sub_tasks.empty?}"\
+      "#{relations_string unless relations.empty?}"
     end
 
     def get_comment_name(comment_name)
@@ -141,6 +159,19 @@ module RM2Jira
       first_initial = name[0][0]
       surname = name[1]
       first_initial + '.' + surname
+    end
+
+    def get_sprint_team
+      {
+        'Physical Kiosk'   => 'Prism & PK Dev',
+        'Kiosk Apps'       => 'Prism & PK Dev',
+        'Kiosk Dashboard'  => 'Prism & PK Dev',
+        'Instore Team'     => 'Prism & PK Dev',
+        'Web Prism'        => 'Prism & PK Dev',
+        'Web Development'  => 'WebKiosk Dev',
+        'Web Kiosk'        => 'WebKiosk Dev',
+        'QATS'             => 'QATS'
+      }
     end
 
     def get_priority
@@ -169,7 +200,7 @@ module RM2Jira
     end
 
     def get_comments(comment)
-      message = "#{comment['user']['name']} at: #{Time.parse(comment['created_on']).strftime("%y-%m-%-e %H:%M")} commented: #{comment['notes']}"
+      message = "#{comment['user']['name']} at: #{Time.parse(comment['created_on']).strftime("%y-%m-%-e %H:%M")} commented:\n #{comment['notes']}"
       { body: message }.to_json
     end
 
@@ -203,6 +234,20 @@ module RM2Jira
         'Merged'          => '181',
         'Reopened'        => '0',
         'Rejected'        => '201'
+      }
+    end
+
+    def relations_hash(relation)
+      {
+        1466 => "Related to plan.io ##{relation['issue_to_id']}",
+        1467 => "Duplicates plan.io ##{relation['issue_to_id']}",
+        1468 => "Duplicated by plan.io ##{relation['issue_id']}",
+        1470 => "Blocks plan.io ##{relation['issue_to_id']}",
+        1471 => "Blocked by plan.io ##{relation['issue_id']}",
+        1472 => "Precedes plan.io ##{relation['issue_to_id']}",
+        1473 => "Follows plan.io ##{relation['issue_id']}",
+        1474 => "Copied to plan.io ##{relation['issue_to_id']}",
+        1475 => "Copied From plan.io ##{relation['issue_id']}",
       }
     end
   end

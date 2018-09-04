@@ -23,7 +23,7 @@ module RM2Jira
         issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
           # next if Validator.search_jira_for_rm_id(issue_id)
           ticket = Redmine.download_ticket(issue_id)
-          download_pdf_from_ticket(ticket) unless ticket['attachments'].empty?
+          download_pdf_from_ticket(ticket)
           bar.increment!
         end
       end
