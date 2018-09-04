@@ -1,5 +1,6 @@
 require 'open-uri'
 require 'progress_bar'
+require 'rm2jira/redmine/pdf'
 
 module RM2Jira
   class Redmine

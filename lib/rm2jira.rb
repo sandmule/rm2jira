@@ -34,9 +34,9 @@ module RM2Jira
       RM2Jira::Redmine.upload_single_ticket(ticket_id)
     end
 
-    desc "download_pdfs [project_name]", 'downloads pdfs from redmine'
-    def download_pdfs(project_name)
-
+    desc "download_pdfs [project_name] (ticket_id)", 'downloads pdfs from redmine. if restarting the application use last ticket id'
+    def download_pdfs(project_name, ticket_id = 0)
+      RM2Jira::Redmine::PDF.download_pdfs(project_name, ticket_id = 0)
     end
   end
 end

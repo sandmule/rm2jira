@@ -169,7 +169,7 @@ module RM2Jira
     end
 
     def get_comments(comment)
-      message = "#{comment['user']['name']} at: #{Time.parse(comment['created_on'])} commented: #{comment['notes']}"
+      message = "#{comment['user']['name']} at: #{Time.parse(comment['created_on']).strftime("%y-%m-%-e %H:%M")} commented: #{comment['notes']}"
       { body: message }.to_json
     end
 

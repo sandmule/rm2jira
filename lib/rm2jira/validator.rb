@@ -78,7 +78,7 @@ module RM2Jira
       return false unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
       return false unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
       return false unless data['customfield_10102'] == get_description
-      return false unless data['reporter']['name'] == get_name
+      return false unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
       return false unless validate_comments(@jira_ticket) unless @rm_ticket['journals'].empty?
       return false unless validate_attachments(@jira_ticket) unless @rm_ticket['attachments'].empty?
       true
