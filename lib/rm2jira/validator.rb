@@ -29,7 +29,7 @@ module RM2Jira
       if response_body['total'] >= 1
         ticket = Redmine.download_ticket(redmine_id)
         validate_data(ticket, response_body['issues'][0]['id'])
-        puts "ticket:#{redmine_id} already exists and validated in jira - skipping"
+        # puts "ticket:#{redmine_id} already exists and validated in jira - skipping"
         true
       else
         false
@@ -51,13 +51,15 @@ module RM2Jira
 
       case @jira_ticket['issuetype']['id']
       when '10001'
-        unless story_validate(@jira_ticket)
+        unless story_validate(@jira_ticket)[:result]
+          puts story_validate(@jira_ticket)[:error]
           puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
           delete_issue(jira_id)
           abort
         end
       when '10004'
-        unless bug_validate(@jira_ticket)
+        unless bug_validate(@jira_ticket)[:result]
+          puts bug_validate(@jira_ticket)[:error]
           puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
           delete_issue(jira_id)
           abort
@@ -70,34 +72,35 @@ module RM2Jira
     end
 
     def self.story_validate(data) #this has to be the most hacky thing I've ever done. Surely I'm missing something sinmple here!
-      return false unless data['summary'] == @rm_ticket['subject']
-      return false unless data['customfield_10060'] == 'see Redmine Description'
-      return false unless data['customfield_10058'] == 'see Redmine Description'
-      return false unless data['customfield_10055'] == @rm_ticket['id']
-      return false unless data['customfield_10056'] == @rm_ticket['project']['name']
-      return false unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
-      return false unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
-      return false unless data['customfield_10102'] == get_description
-      return false unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
-      return false unless validate_comments(@jira_ticket) unless @rm_ticket['journals'].empty?
-      return false unless validate_attachments(@jira_ticket) unless @rm_ticket['attachments'].empty?
-      true
+      return { result: false, error: "#{data['summary']} didn't match #{@rm_ticket['subject']}"} unless data['summary'] == @rm_ticket['subject']
+      return { result: false, error: "#{data['customfield_10060']} didn't match see Redmine Description"} unless data['customfield_10060'] == 'see Redmine Description'
+      return { result: false, error: "#{data['customfield_10058']} didn't match see Redmine Description"} unless data['customfield_10058'] == 'see Redmine Description'
+      return { result: false, error: "#{data['customfield_10055']} didn't match #{@rm_ticket['id']}"} unless data['customfield_10055'] == @rm_ticket['id']
+      return { result: false, error: "#{data['customfield_10056']} didn't match #{@rm_ticket['project']['name']}"} unless data['customfield_10056'] == @rm_ticket['project']['name']
+      return { result: false, error: "#{data['priority']['name']} didn't match #{get_priority[@rm_ticket['priority']['name']]}"} unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
+      return { result: false, error: "#{data['components'][0]['name']} didn't match #{get_component[@rm_ticket['project']['name']]}"} unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
+      return { result: false, error: "#{data['customfield_10102']} didn't match #{get_description}"} unless data['customfield_10102'] == get_description
+      return { result: false, error: "#{data['reporter']['name']} didn't match #{get_name} or s.salter"} unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
+      return { result: false, error: "comments didn't match" } unless validate_comments(@jira_ticket)
+      return { result: false, error: "attachments didn't match" } unless validate_attachments(@jira_ticket)
+      { result: true }
     end
 
     def self.bug_validate(data)
-      return false unless data['summary'] == @rm_ticket['subject']
-      return false unless data['customfield_10055'] == @rm_ticket['id']
-      return false unless data['customfield_10056'] == @rm_ticket['project']['name']
-      return false unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
-      return false unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
-      return false unless data['description'] == get_description
-      return false unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
-      return false unless validate_comments(@jira_ticket) unless @rm_ticket['journals'].empty?
-      return false unless validate_attachments(@jira_ticket) unless @rm_ticket['attachments'].empty?
-      true
+      return { result: false, error: "#{data['summary']} didn't match #{@rm_ticket['subject']}"} unless data['summary'] == @rm_ticket['subject']
+      return { result: false, error: "#{data['customfield_10055']} didn't match #{@rm_ticket['id']}"} unless data['customfield_10055'] == @rm_ticket['id']
+      return { result: false, error: "#{data['customfield_10056']} didn't match #{@rm_ticket['project']['name']}"} unless data['customfield_10056'] == @rm_ticket['project']['name']
+      return { result: false, error: "#{data['priority']['name']} didn't match #{get_priority[@rm_ticket['priority']['name']]}"} unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
+      return { result: false, error: "#{data['components'][0]['name']} didn't match #{get_component[@rm_ticket['project']['name']]}"} unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
+      return { result: false, error: "#{data['description']} didn't match #{get_description}"} unless data['description'] == get_description
+      return { result: false, error: "#{data['reporter']['name']} didn't match #{get_name} or s.salter"} unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
+      return { result: false, error: "comments didn't match" } unless validate_comments(@jira_ticket)
+      return { result: false, error: "attachments didn't match" } unless validate_attachments(@jira_ticket)
+      { result: true }
     end
 
     def self.validate_comments(data)
+      return true if @rm_ticket['journals'].empty?
       results = []
       data['comment']['comments'].each do |j_comment|
         @rm_ticket['journals'].each do |rm_comment|
@@ -110,6 +113,7 @@ module RM2Jira
     end
 
     def self.validate_attachments(data)
+      return true if @rm_ticket['attachments'].empty?
       array = []
       data['attachment'].each { |x| array << x['filename'] }
       return true unless array.uniq.length == array.length
@@ -201,15 +205,15 @@ module RM2Jira
 
     def self.relations_hash(relation)
       {
-        '1466' => "Related to #{relation['issue_to_id']}",
-        '1467' => "Duplicates #{relation['issue_to_id']}",
-        '1468' => "Duplicated by #{relation['issue_id']}",
-        '1470' => "Blocks #{relation['issue_to_id']}",
-        '1471' => "Blocked by #{relation['issue_id']}",
-        '1472' => "Precedes #{relation['issue_to_id']}",
-        '1473' => "Follows #{relation['issue_id']}",
-        '1474' => "Copied to #{relation['issue_to_id']}",
-        '1475' => "Copied From #{relation['issue_id']}",
+        1466 => "Related to plan.io ##{relation['issue_to_id']}",
+        1467 => "Duplicates plan.io ##{relation['issue_to_id']}",
+        1468 => "Duplicated by plan.io ##{relation['issue_id']}",
+        1470 => "Blocks plan.io ##{relation['issue_to_id']}",
+        1471 => "Blocked by plan.io ##{relation['issue_id']}",
+        1472 => "Precedes plan.io ##{relation['issue_to_id']}",
+        1473 => "Follows plan.io ##{relation['issue_id']}",
+        1474 => "Copied from plan.io ##{relation['issue_id']}",
+        1475 => "Copied to plan.io ##{relation['issue_to_id']}",
       }
     end
 

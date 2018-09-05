@@ -78,9 +78,9 @@ module RM2Jira
          },
          customfield_10055: @ticket['id'],
          customfield_10056: @ticket['project']['name'],
-         customfield_10057: {
+         customfield_10057: [{
            value: (get_sprint_team[@ticket['project']['name']] unless get_component[@ticket['project']['name']] == 'QATS')
-         },
+         }],
          components: [{
            name: get_component[@ticket['project']['name']]
          }],
@@ -246,8 +246,8 @@ module RM2Jira
         1471 => "Blocked by plan.io ##{relation['issue_id']}",
         1472 => "Precedes plan.io ##{relation['issue_to_id']}",
         1473 => "Follows plan.io ##{relation['issue_id']}",
-        1474 => "Copied to plan.io ##{relation['issue_to_id']}",
-        1475 => "Copied From plan.io ##{relation['issue_id']}",
+        1474 => "Copied from plan.io ##{relation['issue_id']}",
+        1475 => "Copied to plan.io ##{relation['issue_to_id']}",
       }
     end
   end
