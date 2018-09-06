@@ -95,8 +95,8 @@ module RM2Jira
     end
 
     def get_name
-      return 's.salter' if @ticket['author']['name'].split.count == 1
-      return @ticket['author']['name'] if @ticket['author']['name'] == 's.salter' # api name
+      return 'redmine-xfer' if @ticket['author']['name'].split.count == 1
+      return @ticket['author']['name'] if @ticket['author']['name'] == 'redmine-xfer' # api name
       name = @ticket['author']['name'].downcase.split
       first_initial = name[0][0]
       surname = name[1]
@@ -105,8 +105,8 @@ module RM2Jira
 
     def get_assignee_name
       return '' if @ticket['assigned_to'].nil?
-      return 's.salter' if @ticket['assigned_to']['name'].split.count == 1
-      return @ticket['assigned_to']['name'] if @ticket['assigned_to']['name'] == 's.salter' # api name
+      return 'redmine-xfer' if @ticket['assigned_to']['name'].split.count == 1
+      return @ticket['assigned_to']['name'] if @ticket['assigned_to']['name'] == 'redmine-xfer' # api name
       name = @ticket['assigned_to']['name'].downcase.split
       first_initial = name[0][0]
       surname = name[1]
@@ -154,7 +154,7 @@ module RM2Jira
     end
 
     def get_comment_name(comment_name)
-      return comment_name if comment_name == 's.salter' # api name
+      return comment_name if comment_name == 'redmine-xfer' # api name
       name = comment_name.downcase.split
       first_initial = name[0][0]
       surname = name[1]

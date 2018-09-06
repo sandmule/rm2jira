@@ -36,7 +36,7 @@ module RM2Jira
 
     desc "download_pdfs [project_name] (ticket_id)", 'downloads pdfs from redmine. if restarting the application use last ticket id'
     def download_pdfs(project_name, ticket_id = 0)
-      RM2Jira::Redmine::PDF.download_pdfs(project_name, ticket_id = 0)
+      RM2Jira::Redmine::PDF.download_pdfs(project_name, ticket_id)
     end
   end
 end

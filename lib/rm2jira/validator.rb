@@ -1,6 +1,6 @@
 module RM2Jira
   class Validator
-    USER = 's.salter@livelinktechnology.net'.freeze
+    USER = 'redmine-xfer@livelinktechnology.net'.freeze
     PASS = ENV['PASS']
     @auth64 = Base64.strict_encode64("#{USER}:#{PASS}")
 
@@ -29,7 +29,7 @@ module RM2Jira
       if response_body['total'] >= 1
         ticket = Redmine.download_ticket(redmine_id)
         validate_data(ticket, response_body['issues'][0]['id'])
-        # puts "ticket:#{redmine_id} already exists and validated in jira - skipping"
+         puts "ticket:#{redmine_id} already exists and validated in jira - skipping"
         true
       else
         false
@@ -80,7 +80,7 @@ module RM2Jira
       return { result: false, error: "#{data['priority']['name']} didn't match #{get_priority[@rm_ticket['priority']['name']]}"} unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
       return { result: false, error: "#{data['components'][0]['name']} didn't match #{get_component[@rm_ticket['project']['name']]}"} unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
       return { result: false, error: "#{data['customfield_10102']} didn't match #{get_description}"} unless data['customfield_10102'] == get_description
-      return { result: false, error: "#{data['reporter']['name']} didn't match #{get_name} or s.salter"} unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
+      return { result: false, error: "#{data['reporter']['name']} didn't match #{get_name} or redmine-xfer"} unless data['reporter']['name'] == get_name || data['reporter']['name'] == 'redmine-xfer'
       return { result: false, error: "comments didn't match" } unless validate_comments(@jira_ticket)
       return { result: false, error: "attachments didn't match" } unless validate_attachments(@jira_ticket)
       { result: true }
@@ -93,7 +93,7 @@ module RM2Jira
       return { result: false, error: "#{data['priority']['name']} didn't match #{get_priority[@rm_ticket['priority']['name']]}"} unless data['priority']['name'] == get_priority[@rm_ticket['priority']['name']]
       return { result: false, error: "#{data['components'][0]['name']} didn't match #{get_component[@rm_ticket['project']['name']]}"} unless data['components'][0]['name'] == get_component[@rm_ticket['project']['name']]
       return { result: false, error: "#{data['description']} didn't match #{get_description}"} unless data['description'] == get_description
-      return { result: false, error: "#{data['reporter']['name']} didn't match #{get_name} or s.salter"} unless data['reporter']['name'] == get_name || data['reporter']['name'] == 's.salter'
+      return { result: false, error: "#{data['reporter']['name']} didn't match #{get_name} or redmine-xfer"} unless data['reporter']['name'] == get_name || data['reporter']['name'] == 'redmine-xfer'
       return { result: false, error: "comments didn't match" } unless validate_comments(@jira_ticket)
       return { result: false, error: "attachments didn't match" } unless validate_attachments(@jira_ticket)
       { result: true }
@@ -195,8 +195,8 @@ module RM2Jira
     end
 
     def self.get_name
-      return 's.salter' if @rm_ticket['author']['name'].split.count == 1
-      return @rm_ticket['author']['name'] if @rm_ticket['author']['name'] == 's.salter' # api name
+      return 'redmine-xfer' if @rm_ticket['author']['name'].split.count == 1
+      return @rm_ticket['author']['name'] if @rm_ticket['author']['name'] == 'redmine-xfer' # api name
       name = @rm_ticket['author']['name'].downcase.split
       first_initial = name[0][0]
       surname = name[1]

@@ -2,7 +2,7 @@ require 'rest-client'
 
 module RM2Jira
   class Jira
-    USER = 's.salter@livelinktechnology.net'.freeze
+    USER = 'redmine-xfer@livelinktechnology.net'.freeze
     PASS = ENV['PASS']
 
     def self.upload_ticket_to_jira(ticket)
@@ -13,13 +13,13 @@ module RM2Jira
 
       while res[:code] == '400'
         if res[:response]['errors'].key?('reporter')
-          # puts "Author doesn't exist in Jira, defaulting to bot account"
+           # puts "Author doesn't exist in Jira, defaulting to bot account"
           changed_name[:author] = @ticket['author']['name']
-          @ticket['author']['name'] = 's.salter' # api bot name here
+          @ticket['author']['name'] = 'redmine-xfer' # api bot name here
         elsif res[:response]['errors'].key?('assignee')
           # puts "Assignee doesn't exist in Jira, defaulting to bot account"
           changed_name[:assignee] = @ticket.fetch('assigned_to', {})['name']
-          @ticket.fetch('assigned_to', {})['name'] = 's.salter'
+          @ticket.fetch('assigned_to', {})['name'] = 'redmine-xfer'
         else
           puts "UNCAUGHT ERROR:#{res[:code]}, #{res[:response]['errors']}, Redmine ID:#{@ticket['id']}"
           abort

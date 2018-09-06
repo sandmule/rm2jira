@@ -62,10 +62,13 @@ module RM2Jira
       issue_ids.each.with_index do |x, index|
         id_hash.merge!(x => index)
       end
-
+      bar = ProgressBar.new(@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i]))
       @total_count = @total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i])
       Parallel.each(issue_ids.drop(id_hash[start_at.to_i] || 0), progress: "Migrating #{@total_count} Tickets") do |issue_id|
+      # issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
+        # bar.increment!
         next if Validator.search_jira_for_rm_id(issue_id)
+
         ticket = Redmine.download_ticket(issue_id)
         Redmine.download_attachments(ticket) unless ticket['attachments'].empty?
         RM2Jira::Jira.upload_ticket_to_jira(ticket)
