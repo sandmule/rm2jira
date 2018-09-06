@@ -3,6 +3,7 @@ require 'fileutils'
 module RM2Jira
   class Redmine
     class PDF
+      include Logging
       API_KEY = ENV['API_KEY']
 
       def self.download_pdfs(project_name, ticket_id = 0)
@@ -19,7 +20,7 @@ module RM2Jira
 
         @total_count = issue_ids.count
         bar = ProgressBar.new(@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i]))
-        puts "#{@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i])} tickets to migrate"
+        logger.info "#{@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i])} tickets to migrate"
         issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
           # next if Validator.search_jira_for_rm_id(issue_id)
           ticket = Redmine.download_ticket(issue_id)

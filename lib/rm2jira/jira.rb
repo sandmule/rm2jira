@@ -2,6 +2,7 @@ require 'rest-client'
 
 module RM2Jira
   class Jira
+    include Logging
     USER = 'redmine-xfer@livelinktechnology.net'.freeze
     PASS = ENV['PASS']
 
@@ -13,15 +14,15 @@ module RM2Jira
 
       while res[:code] == '400'
         if res[:response]['errors'].key?('reporter')
-           # puts "Author doesn't exist in Jira, defaulting to bot account"
+          logger.debug "Author doesn't exist in Jira, defaulting to bot account"
           changed_name[:author] = @ticket['author']['name']
           @ticket['author']['name'] = 'redmine-xfer' # api bot name here
         elsif res[:response]['errors'].key?('assignee')
-          # puts "Assignee doesn't exist in Jira, defaulting to bot account"
+          logger.debug "Assignee doesn't exist in Jira, defaulting to bot account"
           changed_name[:assignee] = @ticket.fetch('assigned_to', {})['name']
           @ticket.fetch('assigned_to', {})['name'] = 'redmine-xfer'
         else
-          puts "UNCAUGHT ERROR:#{res[:code]}, #{res[:response]['errors']}, Redmine ID:#{@ticket['id']}"
+          logger.fatal "UNCAUGHT ERROR:#{res[:code]}, #{res[:response]['errors']}, Redmine ID:#{@ticket['id']}"
           abort
         end
 
@@ -56,11 +57,11 @@ module RM2Jira
       res = https.request(req)
       response_body = JSON.parse(res.body)
       if res.code == '201'
-        # puts "Ticket created - Jira ID:#{response_body['id']} Redmine ID:#{@ticket['id']}"
+        logger.info "Ticket created - Jira ID:#{response_body['id']} Redmine ID:#{@ticket['id']}"
         upload_attachments(response_body['id']) unless @ticket['attachments'].empty?
         add_comment(response_body['id']) unless @ticket['journals'].empty?
         abort unless Validator.validate_data(@ticket, response_body['id'], changed_name)
-        # puts "Ticket:#{response_body['id']} validated successfully"
+        logger.info "Ticket:#{response_body['id']} validated successfully"
       end
       { code: res.code, response: response_body }
     end
@@ -71,7 +72,7 @@ module RM2Jira
         resource = RestClient::Resource.new(url, USER, PASS)
         response = resource.post({ file: File.new("tmp/#{@ticket['id']}/#{attachment['filename']}")}, 'X-Atlassian-Token' => 'nocheck' )
         response.code.eql?(200)
-        # puts "Attachment #{index + 1} of #{@ticket['attachments'].count} added to ticket:#{ticket_id}"
+        logger.debug "Attachment #{index + 1} of #{@ticket['attachments'].count} added to ticket:#{ticket_id}"
       end
       FileUtils.rm_rf("tmp/#{@ticket['id']}") if File.directory? "tmp/#{@ticket['id']}"
     end
@@ -90,7 +91,7 @@ module RM2Jira
         req['Authorization'] = "Basic #{@auth64}"
         req.body = @parse_data.get_comments(comment)
         res = https.request(req)
-        # puts "Comment #{count} of #{total_count} added to Jira ticket:#{ticket_id}"
+        logger.debug "Comment #{count} of #{total_count} added to Jira ticket:#{ticket_id}"
       end
     end
   end

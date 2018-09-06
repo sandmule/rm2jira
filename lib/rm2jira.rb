@@ -6,26 +6,29 @@ require 'pp'
 require 'thor'
 require 'pry'
 require 'Base64'
+require 'rm2jira/logger'
 require 'rm2jira/jira'
 require 'rm2jira/redmine'
 require 'rm2jira/parse_data'
 require 'rm2jira/validator'
+require 'rm2jira/configuration'
+
 
 module RM2Jira
   class CLI < Thor
     def initialize(*args)
       super
-      @projects = RM2Jira::Redmine.new.projects
+      @config = RM2Jira::Configuration.new.config
     end
 
     desc "list_projects", "lists available projects"
     def list_projects
-      @projects.each_key { |x| puts x }
+      @config['projects'].each_key { |project| puts project }
     end
 
     desc "migrate_tickets [project_name] (ticket_id)", "migrates tickets from redmine to jira. if restarting the application use last ticket id"
     def migrate_tickets(project_name, ticket_id = 0)
-      ticket_ids = RM2Jira::Redmine.get_issue_ids(RM2Jira::Redmine.new.projects[project_name])
+      ticket_ids = RM2Jira::Redmine.get_issue_ids(@config['projects'][project_name])
       RM2Jira::Redmine.get_issues(ticket_ids, ticket_id)
     end
 

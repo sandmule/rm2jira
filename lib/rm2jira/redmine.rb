@@ -5,6 +5,7 @@ require 'parallel'
 
 module RM2Jira
   class Redmine
+    include Logging
     API_KEY = ENV['API_KEY']
     BASE_URL = ENV['BASE_URL']
     JIRA_API = ENV['JIRA_API']

@@ -1,0 +1,22 @@
+---
+debug_level: info
+projects:
+  Business Reporting: 68
+  Change Control: 83
+  Continuous Deployment: 113
+  Instore Team: 115
+  Kiosk Dashboard: 69
+  Physical Kiosk: 28
+  Kiosk Apps: 61
+  Web Prism: 27
+  Mobile Development: 60
+  Platform: 30
+  QATS: 117
+  Technical Support: 98
+  Walmart Customer Feedback: 42
+  Walmart Customer Service Issues: 67
+  Walmart Photo Sprints: 58
+  Walmart Portal: 71
+  Web Development: 6
+  Photo Book Builder: 22
+  Web Kiosk: 23

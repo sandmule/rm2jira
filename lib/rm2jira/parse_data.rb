@@ -1,5 +1,6 @@
 module RM2Jira
   class ParseData
+    include Logging
     def initialize(ticket)
       @ticket = ticket
       @attachment = @ticket['attachments'].empty?
@@ -15,7 +16,8 @@ module RM2Jira
       when 'Enhancement'
         get_story_body
       else
-        puts 'error in parse data finding issue type'
+        logger.fatal 'error in parse data finding issue type'
+        abort
       end
     end
 

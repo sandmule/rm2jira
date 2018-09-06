@@ -1,5 +1,7 @@
 module RM2Jira
   class Validator
+    include Logging
+
     USER = 'redmine-xfer@livelinktechnology.net'.freeze
     PASS = ENV['PASS']
     @auth64 = Base64.strict_encode64("#{USER}:#{PASS}")
@@ -29,7 +31,7 @@ module RM2Jira
       if response_body['total'] >= 1
         ticket = Redmine.download_ticket(redmine_id)
         validate_data(ticket, response_body['issues'][0]['id'])
-         puts "ticket:#{redmine_id} already exists and validated in jira - skipping"
+         logger.info "ticket:#{redmine_id} already exists and validated in jira - skipping"
         true
       else
         false
@@ -52,20 +54,20 @@ module RM2Jira
       case @jira_ticket['issuetype']['id']
       when '10001'
         unless story_validate(@jira_ticket)[:result]
-          puts story_validate(@jira_ticket)[:error]
-          puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
+          logger.error story_validate(@jira_ticket)[:error]
+          logger.error "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
           delete_issue(jira_id)
           abort
         end
       when '10004'
         unless bug_validate(@jira_ticket)[:result]
-          puts bug_validate(@jira_ticket)[:error]
-          puts "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
+          logger.error bug_validate(@jira_ticket)[:error]
+          logger.error "Jira:#{jira_id}, Redmine:#{@rm_ticket['id']} Ticket was unable to be validated - aborting"
           delete_issue(jira_id)
           abort
         end
       else
-        puts "Unknown ticket type for ticket: #{@rm_ticket['id']}"
+        logger.fatal "Unknown ticket type for ticket: #{@rm_ticket['id']}"
         return false
       end
       true
@@ -225,12 +227,12 @@ module RM2Jira
       req['Authorization'] = "Basic #{@auth64}"
       res = https.request(req)
       if res.code == '204'
-        puts "Ticket:#{issue_id} deleted successfully"
+        logger.info "Ticket:#{issue_id} deleted successfully"
       else
-        puts "unable to delete unvalidated ticket:#{issue_id}"
+        logger.fatal "unable to delete unvalidated ticket:#{issue_id}"
         abort
       end
-      return true
+      true
     end
   end
 end
