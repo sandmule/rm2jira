@@ -6,21 +6,16 @@ module RM2Jira
       include Logging
       API_KEY = ENV['API_KEY']
 
-      def self.download_pdfs(project_name, ticket_id = 0)
-        @project_name = project_name
-        ticket_ids = RM2Jira::Redmine.get_issue_ids(RM2Jira::Redmine.new.projects[project_name])
-        download_tickets(ticket_ids, ticket_id)
-      end
-
-      def self.download_tickets(issue_ids, start_at = 0)
+      def self.download_pdfs(issue_ids, start_at = 0)
+        start_at = start_at.to_i
         id_hash = {}
-        issue_ids.each.with_index do |x, index|
-          id_hash.merge!(x => index)
+        issue_ids.each.with_index do |value, index|
+          id_hash.merge!(value => index)
         end
 
-        @total_count = issue_ids.count
-        bar = ProgressBar.new(@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i]))
-        logger.info "#{@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i])} tickets to migrate"
+        @total_count = issue_ids.count - (start_at = start_at.zero? ? 0 : id_hash[start_at])
+        bar = ProgressBar.new(@total_count)
+        logger.info "#{@total_count} tickets to migrate"
         issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
           # next if Validator.search_jira_for_rm_id(issue_id)
           ticket = Redmine.download_ticket(issue_id)

@@ -8,7 +8,7 @@ module RM2Jira
 
     def self.search_jira_for_rm_id(redmine_id)
       search_body = {
-          jql: "project = ZREDIMP AND 'Redmine ID' = #{redmine_id}",
+          jql: "project = TECH AND 'Redmine ID' = #{redmine_id}",
           startAt: 0,
           maxResults: 15,
           fields: [
@@ -31,7 +31,7 @@ module RM2Jira
       if response_body['total'] >= 1
         ticket = Redmine.download_ticket(redmine_id)
         validate_data(ticket, response_body['issues'][0]['id'])
-         logger.info "ticket:#{redmine_id} already exists and validated in jira - skipping"
+        logger.info "ticket:#{redmine_id} already exists and validated in jira - skipping"
         true
       else
         false

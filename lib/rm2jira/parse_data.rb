@@ -26,7 +26,7 @@ module RM2Jira
         fields: {
           project:
           {
-             id: "10016"
+             id: "10006"
           },
           summary: @ticket['subject'],
           assignee: {
@@ -45,7 +45,7 @@ module RM2Jira
           customfield_10102: get_description,
           customfield_10103: @ticket.fetch('fixed_version', {})['name'],
           customfield_10057: [{
-            value: (get_sprint_team[@ticket['project']['name']] unless get_component[@ticket['project']['name']] == 'QATS')
+            value: get_sprint_team[@ticket['project']['name']]
           }],
           components: [{
             name: get_component[@ticket['project']['name']]
@@ -65,7 +65,7 @@ module RM2Jira
        fields: {
          project:
          {
-            id: "10016"
+            id: "10006"
          },
          summary: @ticket['subject'],
          description: get_description,
@@ -81,7 +81,7 @@ module RM2Jira
          customfield_10055: @ticket['id'],
          customfield_10056: @ticket['project']['name'],
          customfield_10057: [{
-           value: (get_sprint_team[@ticket['project']['name']] unless get_component[@ticket['project']['name']] == 'QATS')
+           value: get_sprint_team[@ticket['project']['name']]
          }],
          components: [{
            name: get_component[@ticket['project']['name']]
@@ -172,7 +172,7 @@ module RM2Jira
         'Web Prism'        => 'Prism & PK Dev',
         'Web Development'  => 'WebKiosk Dev',
         'Web Kiosk'        => 'WebKiosk Dev',
-        'QATS'             => 'QATS'
+        'QATS'             => 'QA'
       }
     end
 

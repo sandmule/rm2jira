@@ -32,7 +32,7 @@ module RM2Jira
 
   def gets_issue_meta #ignore - this is only for dev work
     uri = URI("https://livelinktech.atlassian.net/rest/api/2/issue/ZREDIMP-25/transitions?expand=transitions.fields")
-    uri = URI("https://livelinktech.atlassian.net/rest/api/2/issue/createmeta?expand=projects.issuetypes.fields&projectIds=10016&issuetypeIds=10004")
+    uri = URI("https://livelinktech.atlassian.net/rest/api/2/issue/createmeta?expand=projects.issuetypes.fields&projectIds=10006&issuetypeIds=10004")
     # uri = URI("https://livelinktech.atlassian.net/rest/api/2/issue/11764")
     req = Net::HTTP::Get.new(uri)
 
@@ -55,7 +55,12 @@ module RM2Jira
       @parse_data = ParseData.new(@ticket)
       req.body = @parse_data.get_body(changed_name)
       res = https.request(req)
-      response_body = JSON.parse(res.body)
+      begin
+        response_body = JSON.parse(res.body)
+      rescue JSON::ParserError
+        logger.info "Ticket:#{@ticket['id']} didn't upload, retrying"
+        retry
+      end
       if res.code == '201'
         logger.info "Ticket created - Jira ID:#{response_body['id']} Redmine ID:#{@ticket['id']}"
         upload_attachments(response_body['id']) unless @ticket['attachments'].empty?

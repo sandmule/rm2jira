@@ -2,6 +2,8 @@ require 'yaml'
 
 module RM2Jira
   class Configuration
+    API_KEY = ENV['API_KEY']
+    BASE_URL = ENV['BASE_URL']
     include Logging
     attr_reader :config
 
@@ -9,7 +11,7 @@ module RM2Jira
       @config = YAML.load_file('config/config.yml')
 
       if @config['projects'].nil?
-        @config['projects'] = RM2Jira::Redmine.new.projects
+        @config['projects'] = get_projects
         File.write('config/config.yml', YAML.dump(@config))
       end
 
@@ -25,6 +27,25 @@ module RM2Jira
         'unknown' => Logger::UNKNOWN,
         'warn'    => Logger::WARN
       }
+    end
+
+    def get_projects
+      uri = URI("#{BASE_URL}/projects.json")
+      req = Net::HTTP::Get.new(uri)
+
+      req["Content-Type"] = "application/json"
+      req['X-Redmine-API-Key'] = API_KEY
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      response_json = JSON.parse(http.request(req).body)
+
+      projects = {}
+      response_json['projects'].each do |project|
+        projects.merge!(project['name'] => project['id'])
+      end
+
+      projects
     end
   end
 end

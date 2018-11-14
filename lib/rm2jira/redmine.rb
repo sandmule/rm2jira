@@ -9,30 +9,6 @@ module RM2Jira
     API_KEY = ENV['API_KEY']
     BASE_URL = ENV['BASE_URL']
     JIRA_API = ENV['JIRA_API']
-    attr_reader :projects
-
-    def initialize
-      @projects = get_projects
-    end
-
-    def get_projects
-      uri = URI("#{BASE_URL}/projects.json")
-      req = Net::HTTP::Get.new(uri)
-
-      req["Content-Type"] = "application/json"
-      req['X-Redmine-API-Key'] = API_KEY
-
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      response_json = JSON.parse(http.request(req).body)
-
-      projects = {}
-      response_json['projects'].each do |project|
-        projects.merge!(project['name'] => project['id'])
-      end
-
-      projects
-    end
 
     def self.get_issue_ids(project_id)
       id_array = []
@@ -69,7 +45,6 @@ module RM2Jira
       # issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
         # bar.increment!
         next if Validator.search_jira_for_rm_id(issue_id)
-
         ticket = Redmine.download_ticket(issue_id)
         Redmine.download_attachments(ticket) unless ticket['attachments'].empty?
         RM2Jira::Jira.upload_ticket_to_jira(ticket)
