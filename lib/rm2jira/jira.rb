@@ -54,8 +54,8 @@ module RM2Jira
       req['Authorization'] = "Basic #{@auth64}"
       @parse_data = ParseData.new(@ticket)
       req.body = @parse_data.get_body(changed_name)
-      res = https.request(req)
       begin
+        res = https.request(req)
         response_body = JSON.parse(res.body)
       rescue JSON::ParserError
         logger.info "Ticket:#{@ticket['id']} didn't upload, retrying"

@@ -25,9 +25,14 @@ module RM2Jira
       req = Net::HTTP::Post.new(uri.path, 'Content-Type' => 'application/json')
       req['Authorization'] = "Basic #{@auth64}"
       req.body = search_body
-      res = https.request(req)
-      response_body = JSON.parse(res.body)
 
+      begin
+        res = https.request(req)
+        response_body = JSON.parse(res.body)
+      rescue
+        logger.info 'failed to search, retrying'
+        retry
+      end
       if response_body['total'] >= 1
         ticket = Redmine.download_ticket(redmine_id)
         validate_data(ticket, response_body['issues'][0]['id'])
@@ -49,8 +54,12 @@ module RM2Jira
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
-      @jira_ticket = JSON.parse(http.request(req).body)['fields']
-
+      begin
+        @jira_ticket = JSON.parse(http.request(req).body)['fields']
+      rescue JSON::ParserError
+        logger.info "Validation failed, retrying"
+        retry
+      end
       case @jira_ticket['issuetype']['id']
       when '10001'
         unless story_validate(@jira_ticket)[:result]
