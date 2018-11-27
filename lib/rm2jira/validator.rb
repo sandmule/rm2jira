@@ -30,7 +30,8 @@ module RM2Jira
         res = https.request(req)
         response_body = JSON.parse(res.body)
       rescue
-        logger.info 'failed to search, retrying'
+        logger.info "failed to search for ticket:#{redmine_id}, retrying"
+        sleep 1
         retry
       end
       if response_body['total'] >= 1
@@ -57,7 +58,8 @@ module RM2Jira
       begin
         @jira_ticket = JSON.parse(http.request(req).body)['fields']
       rescue JSON::ParserError
-        logger.info "Validation failed, retrying"
+        logger.info "Validation failed for #{@rm_ticket['id']}, retrying"
+        sleep 1
         retry
       end
       case @jira_ticket['issuetype']['id']
@@ -150,6 +152,9 @@ module RM2Jira
 
     def self.get_component
       {
+        'Content Release'  => 'Content Release',
+        'Site Changes'     => 'Site Changes',
+        'Item Setup'       => 'Item Setup',
         'Physical Kiosk'   => 'Physical Kiosk',
         'Kiosk Apps'       => 'Physical Kiosk',
         'Kiosk Dashboard'  => 'Kiosk Dashboard',

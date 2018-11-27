@@ -1,9 +1,10 @@
 ---
-debug_level: info
+debug_level: debug
 projects:
   Business Reporting: 68
   Change Control: 83
   Continuous Deployment: 113
+  InfraOps: 2
   Instore Team: 115
   Kiosk Dashboard: 69
   Physical Kiosk: 28
@@ -13,6 +14,10 @@ projects:
   Platform: 30
   QATS: 117
   Technical Support: 98
+  Walmart Content: 34
+  Content Release: 63
+  Item Setup: 62
+  Site Changes: 64
   Walmart Customer Feedback: 42
   Walmart Customer Service Issues: 67
   Walmart Photo Sprints: 58
@@ -20,3 +25,4 @@ projects:
   Web Development: 6
   Photo Book Builder: 22
   Web Kiosk: 23
+  WK Feature Requests: 31

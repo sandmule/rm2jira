@@ -51,3 +51,4 @@ build-iPhoneSimulator/
 .env
 .DS_Store
 ticket_pdfs
+ticket_ids

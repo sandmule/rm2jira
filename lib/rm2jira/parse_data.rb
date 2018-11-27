@@ -15,8 +15,10 @@ module RM2Jira
         get_story_body
       when 'Enhancement'
         get_story_body
+      when 'Support'
+        get_story_body
       else
-        logger.fatal 'error in parse data finding issue type'
+        logger.fatal "error in parse data finding issue type #{@ticket['id']}"
         abort
       end
     end
@@ -189,7 +191,8 @@ module RM2Jira
     def issue_types(ticket_type)
       redmine_issues = { 'Task'        => :Story,
                          'Enhancement' => :Story,
-                         'Defect'      => :Bug
+                         'Defect'      => :Bug,
+                         'Support'     => :Story
                        }
       jira_issues = { Story:    '10001',
                       Support:  '10010',
@@ -207,7 +210,9 @@ module RM2Jira
     end
 
     def get_component
-      {
+      { 'Content Release'  => 'Content Release',
+        'Site Changes'     => 'Site Changes',
+        'Item Setup'       => 'Item Setup',
         'Physical Kiosk'   => 'Physical Kiosk',
         'Kiosk Apps'       => 'Physical Kiosk',
         'Kiosk Dashboard'  => 'Kiosk Dashboard',

@@ -59,6 +59,7 @@ module RM2Jira
         response_body = JSON.parse(res.body)
       rescue JSON::ParserError
         logger.info "Ticket:#{@ticket['id']} didn't upload, retrying"
+        sleep 1
         retry
       end
       if res.code == '201'
@@ -74,8 +75,15 @@ module RM2Jira
     def self.upload_attachments(ticket_id)
       @ticket['attachments'].each.with_index do |attachment, index|
         url = "https://livelinktech.atlassian.net/rest/api/2/issue/#{ticket_id}/attachments"
-        resource = RestClient::Resource.new(url, USER, PASS)
-        response = resource.post({ file: File.new("tmp/#{@ticket['id']}/#{attachment['filename']}")}, 'X-Atlassian-Token' => 'nocheck' )
+        begin
+          resource = RestClient::Resource.new(url, USER, PASS)
+          response = resource.post({ file: File.new("tmp/#{@ticket['id']}/#{attachment['filename']}")}, 'X-Atlassian-Token' => 'nocheck' )
+        rescue => exception
+          logger.info "uploading attachment failed for #{ticket_id}"
+          binding.pry
+          sleep 1
+          retry
+        end
         response.code.eql?(200)
         logger.debug "Attachment #{index + 1} of #{@ticket['attachments'].count} added to ticket:#{ticket_id}"
       end
