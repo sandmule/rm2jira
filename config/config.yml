@@ -26,3 +26,18 @@ projects:
   Photo Book Builder: 22
   Web Kiosk: 23
   WK Feature Requests: 31
+jira_projects:
+  CHG: '10003'
+  CONTENT: '10018'
+  CONTARCH: '10019'
+  ICE: '10017'
+  INCID: '10002'
+  HELPDESK: '10015'
+  PROJ: '10005'
+  MOBILE: '10011'
+  PPK: '10010'
+  SYSENG: '10014'
+  TECH: '10006'
+  TS: '10012'
+  ZREDIMP: '10016'
+  WK: '10009'

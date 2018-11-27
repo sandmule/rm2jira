@@ -26,8 +26,9 @@ module RM2Jira
       @config['projects'].each_key { |project| puts project }
     end
 
-    desc "migrate_tickets [project_name] (ticket_id)", "migrates tickets from redmine to jira. if restarting the application use last ticket id"
-    def migrate_tickets(project_name, ticket_id = 0)
+    desc "migrate_tickets [project_name] [jira_project] (ticket_id)", "migrates tickets from redmine to jira. if restarting the application use last ticket id"
+    def migrate_tickets(project_name, jira_project, ticket_id = 0)
+      $jira_project = jira_project
       ticket_ids = RM2Jira::Redmine.get_issue_ids(@config['projects'][project_name])
       RM2Jira::Redmine.get_issues(ticket_ids, ticket_id)
     end

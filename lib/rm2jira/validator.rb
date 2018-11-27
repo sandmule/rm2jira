@@ -8,7 +8,7 @@ module RM2Jira
 
     def self.search_jira_for_rm_id(redmine_id)
       search_body = {
-          jql: "project = TECH AND 'Redmine ID' = #{redmine_id}",
+          jql: "project = #{$jira_project} AND 'Redmine ID' = #{redmine_id}",
           startAt: 0,
           maxResults: 15,
           fields: [
@@ -84,7 +84,7 @@ module RM2Jira
       true
     end
 
-    def self.story_validate(data) #this has to be the most hacky thing I've ever done. Surely I'm missing something sinmple here!
+    def self.story_validate(data) #this has to be the most hacky thing I've ever done. Surely I'm missing something simple here!
       return { result: false, error: "#{data['summary']} didn't match #{@rm_ticket['subject']}"} unless data['summary'] == @rm_ticket['subject']
       return { result: false, error: "#{data['customfield_10060']} didn't match see Redmine Description"} unless data['customfield_10060'] == 'see Redmine Description'
       return { result: false, error: "#{data['customfield_10058']} didn't match see Redmine Description"} unless data['customfield_10058'] == 'see Redmine Description'

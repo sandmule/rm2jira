@@ -28,7 +28,7 @@ module RM2Jira
         fields: {
           project:
           {
-             id: "10006"
+             id: get_project_id
           },
           summary: @ticket['subject'],
           assignee: {
@@ -67,7 +67,7 @@ module RM2Jira
        fields: {
          project:
          {
-            id: "10006"
+            id: get_project_id
          },
          summary: @ticket['subject'],
          description: get_description,
@@ -256,6 +256,10 @@ module RM2Jira
         1474 => "Copied from plan.io ##{relation['issue_id']}",
         1475 => "Copied to plan.io ##{relation['issue_to_id']}",
       }
+    end
+
+    def get_project_id
+      YAML.load_file('config/config.yml')['jira_projects'][$jira_project]
     end
   end
 end
