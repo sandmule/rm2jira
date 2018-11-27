@@ -2,6 +2,7 @@ require 'open-uri'
 require 'progress_bar'
 require 'rm2jira/redmine/pdf'
 require 'parallel'
+require 'fileutils'
 
 module RM2Jira
   class Redmine
@@ -11,6 +12,11 @@ module RM2Jira
     JIRA_API = ENV['JIRA_API']
 
     def self.get_issue_ids(project_id)
+      if File.exist?('ticket_ids/walmart-content.txt')
+        id_array = File.readlines('ticket_ids/walmart-content.txt').map(&:strip).map(&:to_i)
+        @total_count = id_array.uniq.count
+        return id_array
+      end
       id_array = []
       offset = 0
       while @total_count != id_array.uniq.count
@@ -28,6 +34,13 @@ module RM2Jira
         response_json['issues'].each do |x|
           next if id_array.include? x['id']
           id_array << x['id']
+        end
+      end
+
+      unless File.exist?('ticket_ids/walmart-content.txt')
+        FileUtils.mkdir 'ticket_ids'
+        File.open("ticket_ids/walmart-content.txt", "w+") do |f|
+          id_array.each { |element| f.puts(element) }
         end
       end
 
