@@ -11,9 +11,9 @@ module RM2Jira
     BASE_URL = ENV['BASE_URL']
     JIRA_API = ENV['JIRA_API']
 
-    def self.get_issue_ids(project_id)
-      if File.exist?('ticket_ids/walmart-content.txt')
-        id_array = File.readlines('ticket_ids/walmart-content.txt').map(&:strip).map(&:to_i)
+    def self.get_issue_ids(project_id, project_name)
+      if File.exist?("ticket_ids/#{project_name}.txt")
+        id_array = File.readlines("ticket_ids/#{project_name}.txt").map(&:strip).map(&:to_i)
         @total_count = id_array.uniq.count
         return id_array
       end
@@ -37,9 +37,9 @@ module RM2Jira
         end
       end
 
-      unless File.exist?('ticket_ids/walmart-content.txt')
-        FileUtils.mkdir 'ticket_ids'
-        File.open("ticket_ids/walmart-content.txt", "w+") do |f|
+      unless File.exist?("ticket_ids/#{project_name}.txt")
+        FileUtils.mkdir 'ticket_ids' unless File.exist?('ticket_ids')
+        File.open("ticket_ids/#{project_name}.txt", "w+") do |f|
           id_array.each { |element| f.puts(element) }
         end
       end
@@ -54,9 +54,9 @@ module RM2Jira
       end
       bar = ProgressBar.new(@total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i]))
       @total_count = @total_count - (start_at.to_i.zero? ? 0 : id_hash[start_at.to_i])
-      Parallel.each(issue_ids.drop(id_hash[start_at.to_i] || 0), progress: "Migrating #{@total_count} Tickets") do |issue_id|
-      # issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
-        # bar.increment!
+      # Parallel.each(issue_ids.drop(id_hash[start_at.to_i] || 0), progress: "Migrating #{@total_count} Tickets") do |issue_id|
+      issue_ids.drop(id_hash[start_at.to_i] || 0).each do |issue_id|
+        bar.increment!
         next if Validator.search_jira_for_rm_id(issue_id)
         ticket = Redmine.download_ticket(issue_id)
         Redmine.download_attachments(ticket) unless ticket['attachments'].empty?
