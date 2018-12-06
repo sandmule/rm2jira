@@ -80,7 +80,6 @@ module RM2Jira
           response = resource.post({ file: File.new("tmp/#{@ticket['id']}/#{attachment['filename']}")}, 'X-Atlassian-Token' => 'nocheck' )
         rescue => exception
           logger.info "uploading attachment failed for #{ticket_id}"
-          binding.pry
           sleep 1
           retry
         end
